@@ -25,10 +25,14 @@ facebook_ads_analytics/
 │   ├── target_urls.php                # Target URL statistics listing
 │   ├── target_url_detail.php          # Detailed view for individual Target URL
 │   ├── media_hashes.php               # Ad Media Hash statistics and distribution
+│   ├── media_hash_detail.php          # Comprehensive Media Hash details and analysis
+│   ├── page_url_chart.php             # Dedicated page for Page + URL analysis
+│   ├── url_page_chart.php             # Dedicated page for URL + Page analysis
+│   ├── page_media_chart.php           # Dedicated page for Page + Media Hash analysis
 │   └── ajax/
-│       ├── page_url_chart.php         # AJAX endpoint for Page + URL charts
-│       ├── media_hash_details.php     # AJAX endpoint for Media Hash details
-│       └── page_media_chart.php       # AJAX endpoint for Page + Media Hash charts
+│       ├── page_url_chart.php         # AJAX endpoint for Page + URL charts (legacy)
+│       ├── media_hash_details.php     # AJAX endpoint for Media Hash details (legacy)
+│       └── page_media_chart.php       # AJAX endpoint for Page + Media Hash charts (legacy)
 │
 └── uploads/                           # Directory for CSV files to be imported
     └── example.csv                    # Sample CSV file for testing
@@ -59,9 +63,10 @@ facebook_ads_analytics/
 
 ### Interactive Features
 - Dynamic charts using Chart.js
-- Modal popups for detailed views
-- AJAX endpoints for real-time data loading
+- Dedicated pages for detailed analysis (no more modals)
+- Direct linking to specific chart combinations
 - Responsive design for mobile compatibility
+- Breadcrumb navigation between related analyses
 
 ### Styling and Assets
 - Modern CSS with gradient backgrounds

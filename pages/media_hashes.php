@@ -115,10 +115,10 @@ try {
                                 <td><?php echo $hash['first_used'] ? date('Y-m-d', strtotime($hash['first_used'])) : 'N/A'; ?></td>
                                 <td><?php echo $hash['last_used'] ? date('Y-m-d', strtotime($hash['last_used'])) : 'N/A'; ?></td>
                                 <td>
-                                    <button class="btn" style="padding: 0.5rem 1rem; font-size: 0.9rem;" 
-                                            onclick="showMediaHashDetails('<?php echo htmlspecialchars($hash['ad_media_hash']); ?>')">
+                                    <a href="media_hash_detail.php?hash=<?php echo urlencode($hash['ad_media_hash']); ?>" 
+                                       class="btn" style="padding: 0.5rem 1rem; font-size: 0.9rem;">
                                         View Details
-                                    </button>
+                                    </a>
                                 </td>
                             </tr>
                             <?php endforeach; ?>
@@ -134,34 +134,6 @@ try {
                 <a href="../index.php" class="btn">Go to Dashboard</a>
             </div>
             <?php endif; ?>
-        </div>
-
-        <!-- Modal for Media Hash Details -->
-        <div id="mediaHashModal" class="modal">
-            <div class="modal-content">
-                <span class="modal-close" onclick="FacebookAdsAnalytics.closeModal('mediaHashModal')">&times;</span>
-                <h3 id="modalTitle">Media Hash Details</h3>
-                
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin: 2rem 0;">
-                    <div>
-                        <h4>Facebook Page Distribution</h4>
-                        <div class="chart-container">
-                            <canvas id="pageDistributionChart" style="height: 300px;"></canvas>
-                        </div>
-                    </div>
-                    <div>
-                        <h4>Usage Over Time</h4>
-                        <div class="chart-container">
-                            <canvas id="usageTimeChart" style="height: 300px;"></canvas>
-                        </div>
-                    </div>
-                </div>
-                
-                <div>
-                    <h4>Facebook Pages using this Media Hash</h4>
-                    <div id="pagesList">Loading...</div>
-                </div>
-            </div>
         </div>
     </main>
 
@@ -230,130 +202,6 @@ try {
             });
             <?php endif; ?>
         });
-
-        function showMediaHashDetails(mediaHash) {
-            FacebookAdsAnalytics.openModal('mediaHashModal');
-            document.getElementById('modalTitle').textContent = 'Media Hash: ' + mediaHash.substring(0, 20) + '...';
-            
-            // Load detailed data via AJAX
-            FacebookAdsAnalytics.makeAjaxRequest(
-                'ajax/media_hash_details.php',
-                { media_hash: mediaHash },
-                function(response) {
-                    if (response.success) {
-                        // Create page distribution pie chart
-                        const pageData = {
-                            labels: response.pages.map(page => page.facebook_page_id.substring(0, 15) + '...'),
-                            datasets: [{
-                                data: response.pages.map(page => parseInt(page.usage_count)),
-                                backgroundColor: FacebookAdsAnalytics.generateColors(response.pages.length),
-                                borderWidth: 1,
-                                borderColor: '#fff'
-                            }]
-                        };
-
-                        if (window.pageDistChart) window.pageDistChart.destroy();
-                        window.pageDistChart = FacebookAdsAnalytics.createPieChart('pageDistributionChart', pageData);
-
-                        // Create usage over time chart
-                        const timeData = {
-                            labels: response.timeline.map(item => item.month),
-                            datasets: [{
-                                label: 'Usage Count',
-                                data: response.timeline.map(item => parseInt(item.ad_count)),
-                                backgroundColor: 'rgba(102, 126, 234, 0.2)',
-                                borderColor: '#667eea',
-                                borderWidth: 2
-                            }]
-                        };
-
-                        if (window.usageTimeChart) window.usageTimeChart.destroy();
-                        window.usageTimeChart = FacebookAdsAnalytics.createLineChart('usageTimeChart', timeData);
-
-                        // Create pages list
-                        let pagesHtml = '<table class="data-table"><thead><tr><th>Facebook Page ID</th><th>Usage Count</th><th>Actions</th></tr></thead><tbody>';
-                        response.pages.forEach(page => {
-                            pagesHtml += `<tr>
-                                <td><a href="facebook_page_detail.php?page_id=${encodeURIComponent(page.facebook_page_id)}">${page.facebook_page_id}</a></td>
-                                <td>${FacebookAdsAnalytics.formatNumber(page.usage_count)}</td>
-                                <td><button class="btn" style="padding: 0.3rem 0.8rem; font-size: 0.8rem;" onclick="showPageMediaChart('${page.facebook_page_id}', '${mediaHash}')">View Chart</button></td>
-                            </tr>`;
-                        });
-                        pagesHtml += '</tbody></table>';
-                        document.getElementById('pagesList').innerHTML = pagesHtml;
-
-                    } else {
-                        document.getElementById('pagesList').innerHTML = '<p>Error loading details: ' + response.error + '</p>';
-                    }
-                },
-                function(error) {
-                    document.getElementById('pagesList').innerHTML = '<p>Error: ' + error + '</p>';
-                }
-            );
-        }
-
-        function showPageMediaChart(pageId, mediaHash) {
-            // Create a new modal for page + media chart
-            let pageMediaModal = document.getElementById('pageMediaModal');
-            if (!pageMediaModal) {
-                // Create modal if it doesn't exist
-                pageMediaModal = document.createElement('div');
-                pageMediaModal.id = 'pageMediaModal';
-                pageMediaModal.className = 'modal';
-                pageMediaModal.innerHTML = `
-                    <div class="modal-content">
-                        <span class="modal-close" onclick="FacebookAdsAnalytics.closeModal('pageMediaModal')">&times;</span>
-                        <h3 id="pageMediaModalTitle">Page + Media Hash Chart</h3>
-                        <div class="chart-container">
-                            <canvas id="pageMediaChart" style="height: 400px;"></canvas>
-                        </div>
-                    </div>
-                `;
-                document.body.appendChild(pageMediaModal);
-            }
-            
-            FacebookAdsAnalytics.openModal('pageMediaModal');
-            document.getElementById('pageMediaModalTitle').textContent = 'Growth Chart: ' + pageId.substring(0, 15) + '... + Media Hash';
-            
-            // Load chart data via AJAX
-            FacebookAdsAnalytics.makeAjaxRequest(
-                'ajax/page_media_chart.php',
-                { page_id: pageId, media_hash: mediaHash },
-                function(response) {
-                    if (response.success) {
-                        const chartData = {
-                            labels: response.data.map(item => item.month),
-                            datasets: [{
-                                label: 'Ads Count',
-                                data: response.data.map(item => parseInt(item.ad_count)),
-                                backgroundColor: 'rgba(102, 126, 234, 0.2)',
-                                borderColor: '#667eea',
-                                borderWidth: 2
-                            }]
-                        };
-
-                        // Destroy existing chart if it exists
-                        if (window.pageMediaChart) {
-                            window.pageMediaChart.destroy();
-                        }
-
-                        window.pageMediaChart = FacebookAdsAnalytics.createLineChart('pageMediaChart', chartData, {
-                            plugins: {
-                                title: {
-                                    display: true,
-                                    text: 'Monthly Ad Count for Page + Media Hash Combination'
-                                }
-                            }
-                        });
-                    } else {
-                        document.getElementById('pageMediaChart').parentElement.innerHTML = '<p>Error loading chart data</p>';
-                    }
-                },
-                function(error) {
-                    document.getElementById('pageMediaChart').parentElement.innerHTML = '<p>Error: ' + error + '</p>';
-                }
-            );
-        }
     </script>
 </body>
 </html>

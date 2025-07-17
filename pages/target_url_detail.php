@@ -144,10 +144,10 @@ try {
                                 <td><?php echo $page['first_used'] ? date('Y-m-d', strtotime($page['first_used'])) : 'N/A'; ?></td>
                                 <td><?php echo $page['last_used'] ? date('Y-m-d', strtotime($page['last_used'])) : 'N/A'; ?></td>
                                 <td>
-                                    <button class="btn" style="padding: 0.5rem 1rem; font-size: 0.9rem;" 
-                                            onclick="showUrlPageChart('<?php echo htmlspecialchars($targetUrl); ?>', '<?php echo htmlspecialchars($page['facebook_page_id']); ?>')">
+                                    <a href="url_page_chart.php?target_url=<?php echo urlencode($targetUrl); ?>&page_id=<?php echo urlencode($page['facebook_page_id']); ?>" 
+                                       class="btn" style="padding: 0.5rem 1rem; font-size: 0.9rem;">
                                         View Chart
-                                    </button>
+                                    </a>
                                 </td>
                             </tr>
                             <?php endforeach; ?>
@@ -157,17 +157,6 @@ try {
                 <?php else: ?>
                 <p>No Facebook Pages found for this Target URL.</p>
                 <?php endif; ?>
-            </div>
-        </div>
-
-        <!-- Modal for URL + Page Chart -->
-        <div id="urlPageModal" class="modal">
-            <div class="modal-content">
-                <span class="modal-close" onclick="FacebookAdsAnalytics.closeModal('urlPageModal')">&times;</span>
-                <h3 id="modalTitle">Growth Chart</h3>
-                <div class="chart-container">
-                    <canvas id="urlPageChart" style="height: 400px;"></canvas>
-                </div>
             </div>
         </div>
 
@@ -234,50 +223,6 @@ try {
             });
             <?php endif; ?>
         });
-
-        function showUrlPageChart(targetUrl, pageId) {
-            FacebookAdsAnalytics.openModal('urlPageModal');
-            document.getElementById('modalTitle').textContent = 'Growth Chart: ' + targetUrl + ' ← ' + pageId;
-            
-            // Load chart data via AJAX (reuse the same endpoint)
-            FacebookAdsAnalytics.makeAjaxRequest(
-                'ajax/page_url_chart.php',
-                { page_id: pageId, target_url: targetUrl },
-                function(response) {
-                    if (response.success) {
-                        const chartData = {
-                            labels: response.data.map(item => item.month),
-                            datasets: [{
-                                label: 'Ads Count',
-                                data: response.data.map(item => parseInt(item.ad_count)),
-                                backgroundColor: 'rgba(102, 126, 234, 0.2)',
-                                borderColor: '#667eea',
-                                borderWidth: 2
-                            }]
-                        };
-
-                        // Destroy existing chart if it exists
-                        if (window.urlPageChart) {
-                            window.urlPageChart.destroy();
-                        }
-
-                        window.urlPageChart = FacebookAdsAnalytics.createLineChart('urlPageChart', chartData, {
-                            plugins: {
-                                title: {
-                                    display: true,
-                                    text: 'Monthly Ad Count for URL + Page Combination'
-                                }
-                            }
-                        });
-                    } else {
-                        document.getElementById('urlPageChart').parentElement.innerHTML = '<p>Error loading chart data</p>';
-                    }
-                },
-                function(error) {
-                    document.getElementById('urlPageChart').parentElement.innerHTML = '<p>Error: ' + error + '</p>';
-                }
-            );
-        }
     </script>
 </body>
 </html>

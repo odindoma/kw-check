@@ -144,10 +144,10 @@ try {
                                 <td><?php echo $url['first_used'] ? date('Y-m-d', strtotime($url['first_used'])) : 'N/A'; ?></td>
                                 <td><?php echo $url['last_used'] ? date('Y-m-d', strtotime($url['last_used'])) : 'N/A'; ?></td>
                                 <td>
-                                    <button class="btn" style="padding: 0.5rem 1rem; font-size: 0.9rem;" 
-                                            onclick="showPageUrlChart('<?php echo htmlspecialchars($pageId); ?>', '<?php echo htmlspecialchars($url['target_url_base']); ?>')">
+                                    <a href="page_url_chart.php?page_id=<?php echo urlencode($pageId); ?>&target_url=<?php echo urlencode($url['target_url_base']); ?>" 
+                                       class="btn" style="padding: 0.5rem 1rem; font-size: 0.9rem;">
                                         View Chart
-                                    </button>
+                                    </a>
                                 </td>
                             </tr>
                             <?php endforeach; ?>
@@ -157,17 +157,6 @@ try {
                 <?php else: ?>
                 <p>No target URLs found for this Facebook Page.</p>
                 <?php endif; ?>
-            </div>
-        </div>
-
-        <!-- Modal for Page + URL Chart -->
-        <div id="pageUrlModal" class="modal">
-            <div class="modal-content">
-                <span class="modal-close" onclick="FacebookAdsAnalytics.closeModal('pageUrlModal')">&times;</span>
-                <h3 id="modalTitle">Growth Chart</h3>
-                <div class="chart-container">
-                    <canvas id="pageUrlChart" style="height: 400px;"></canvas>
-                </div>
             </div>
         </div>
 
@@ -234,50 +223,6 @@ try {
             });
             <?php endif; ?>
         });
-
-        function showPageUrlChart(pageId, targetUrl) {
-            FacebookAdsAnalytics.openModal('pageUrlModal');
-            document.getElementById('modalTitle').textContent = 'Growth Chart: ' + pageId + ' → ' + targetUrl;
-            
-            // Load chart data via AJAX
-            FacebookAdsAnalytics.makeAjaxRequest(
-                'ajax/page_url_chart.php',
-                { page_id: pageId, target_url: targetUrl },
-                function(response) {
-                    if (response.success) {
-                        const chartData = {
-                            labels: response.data.map(item => item.month),
-                            datasets: [{
-                                label: 'Ads Count',
-                                data: response.data.map(item => parseInt(item.ad_count)),
-                                backgroundColor: 'rgba(102, 126, 234, 0.2)',
-                                borderColor: '#667eea',
-                                borderWidth: 2
-                            }]
-                        };
-
-                        // Destroy existing chart if it exists
-                        if (window.pageUrlChart) {
-                            window.pageUrlChart.destroy();
-                        }
-
-                        window.pageUrlChart = FacebookAdsAnalytics.createLineChart('pageUrlChart', chartData, {
-                            plugins: {
-                                title: {
-                                    display: true,
-                                    text: 'Monthly Ad Count for Page + URL Combination'
-                                }
-                            }
-                        });
-                    } else {
-                        document.getElementById('pageUrlChart').parentElement.innerHTML = '<p>Error loading chart data</p>';
-                    }
-                },
-                function(error) {
-                    document.getElementById('pageUrlChart').parentElement.innerHTML = '<p>Error: ' + error + '</p>';
-                }
-            );
-        }
     </script>
 </body>
 </html>
