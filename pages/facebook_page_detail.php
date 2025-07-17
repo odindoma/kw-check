@@ -12,7 +12,6 @@ try {
     // Get basic page statistics
     $pageInfo = fetchOne("
         SELECT 
-            facebook_page_id,
             COUNT(*) as total_ads,
             COUNT(DISTINCT target_url_base) as unique_targets,
             COUNT(DISTINCT ad_media_hash) as unique_media,
@@ -25,6 +24,9 @@ try {
     if (!$pageInfo) {
         throw new Exception("Facebook Page ID not found");
     }
+    
+    // Add the page_id to the result for consistency
+    $pageInfo['facebook_page_id'] = $pageId;
 
     // Get growth data (ads per month)
     $growthData = fetchAll("

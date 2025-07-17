@@ -12,7 +12,6 @@ try {
     // Get basic URL statistics
     $urlInfo = fetchOne("
         SELECT 
-            target_url_base,
             COUNT(*) as total_ads,
             COUNT(DISTINCT facebook_page_id) as unique_pages,
             COUNT(DISTINCT ad_media_hash) as unique_media,
@@ -25,6 +24,9 @@ try {
     if (!$urlInfo) {
         throw new Exception("Target URL not found");
     }
+    
+    // Add the target_url to the result for consistency
+    $urlInfo['target_url_base'] = $targetUrl;
 
     // Get growth data (ads per month)
     $growthData = fetchAll("
